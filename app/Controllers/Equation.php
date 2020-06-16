@@ -2,9 +2,13 @@
 
 class Equation extends BaseController
 {
-
+    /**
+     * Function that solves quadratic equation
+     *
+     */
     public function solve()
     {
+        // Validation
         $validation = \Config\Services::validation();
 
         $validation->setRules([
@@ -23,11 +27,13 @@ class Equation extends BaseController
             ]);
         }
 
+        // Request variables
         $a = $this->request->getVar('a');
         $b = $this->request->getVar('b');
         $c = $this->request->getVar('c');
         $token = $this->request->getVar('token');
 
+        // Check if request with given a, b and c already exist and get saved response
         $db = \Config\Database::connect();
         $builder = $db->table('requests');
         $existing_request = $builder->select('requests.id, response')
@@ -37,6 +43,7 @@ class Equation extends BaseController
             ->getRow();
 
         if ($existing_request) {
+            // Sent request exist in database, increase it's count
             $builder = $db->table('requests');
             $builder->set('count', 'count + 1', FALSE)
                 ->where('id', $existing_request->id)
@@ -50,32 +57,39 @@ class Equation extends BaseController
         $request_vars = $this->request->getPost();
         $request_vars['count'] = 1;
 
+        // Saving request to database
         $requestModel = new \App\Models\RequestModel();
         $requestModel->insert($request_vars);
         $request_id = $requestModel->getInsertID();
 
+        // Calculating Discriminant
         $d = $b * $b - 4 * $a * $c;
 
+        // Build response data based on Discriminant value
         if ($d < 0) {
+            // Equation have no solution
             $response_data = [
                 'status' => 3,
-                'message' => 'No solution found',
+                'message' => lang('equation.no_solution'),
             ];
         } elseif ($d == 0) {
+            // Equation have 1 solution
             $response_data = [
                 'status' => 2,
-                'message' => '1 solution found',
+                'message' => lang('equation.1_solution'),
                 'x1' => (-$b / 2 * $a),
             ];
         } else {
+            // Equation have 2 solutions
             $response_data = [
                 'status' => 1,
-                'message' => '2 solutions found',
+                'message' => lang('equation.2_solutions'),
                 'x1' => ((-$b + sqrt($d)) / (2 * $a)),
                 'x2' => ((-$b - sqrt($d)) / (2 * $a)),
             ];
         }
 
+        // Saving generated response to database
         $responseModel = new \App\Models\ResponseModel();
         $responseModel->insert([
             'request_id' => $request_id,

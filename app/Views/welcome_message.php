@@ -22,21 +22,26 @@
 </head>
 <body>
 
+<!--Equation form-->
 <form id="equation_form">
     <input type="text" name="a" id="">x&sup2; +
     <input type="text" name="b" id="">x +
     <input type="text" name="c" id=""> = 0
 </form>
 
+<!--Error result block-->
 <div class="result_block" id="result_error">
     <p></p>
 </div>
+<!--Block for result with 2 solutions-->
 <div class="result_block" id="result_two_solutions">
     <p></p>
 </div>
+<!--Block for result with 1 solution-->
 <div class="result_block" id="result_single_solution">
     <p></p>
 </div>
+<!--Block for result with no solution-->
 <div class="result_block" id="result_no_solution">
     <p></p>
 </div>
@@ -55,14 +60,18 @@
             block_obj.show();
             $('p', block_obj).html(text);
         }
+        // Handling a, b and c values change
         $('form input').keyup(function() {
             var form_data = {};
+            // Putting a, b and c to object
             $("form").find(":input").each(function() {
                 form_data[this.name] = $(this).val();
             });
 
+            // Hide currently shown block
             $('.result_block').hide();
 
+            // Errors handling
             if(!isInteger(form_data.a)) {
                 showBlock('result_error', 'The a field must contain an integer');
                 return;
@@ -80,7 +89,10 @@
                 return;
             }
 
+            // Calculating token
             form_data['token'] = sha1(form_data.a + form_data.b + form_data.c);
+
+            // Request to backend to solve equation
             $.post(
                 '/api/equation',
                 form_data,
